@@ -1,0 +1,1 @@
+# visualstudio_caffe_project_sample
