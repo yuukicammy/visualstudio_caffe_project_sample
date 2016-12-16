@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="UserMacros">
+    <!--NOTE: CpuOnlyBuild and UseCuDNN flags can't be set at the same time.-->
+    <CpuOnlyBuild>false</CpuOnlyBuild>
+    <UseCuDNN>true</UseCuDNN>
+    <CudaVersion>7.5</CudaVersion>
+    <!-- NOTE: If Python support is enabled, PythonDir (below) needs to be
+         set to the root of your Python installation. If your Python installation
+         does not contain debug libraries, debug build will not work. -->
+    <PythonSupport>false</PythonSupport>
+    <!-- NOTE: If Matlab support is enabled, MatlabDir (below) needs to be
+         set to the root of your Matlab installation. -->
+    <MatlabSupport>false</MatlabSupport>
+    <!-- Set versions of the Caffe dependencies. 
+         They must be same as the package definitions in "vc12\libcaffe\packages.config". -->
+    <BoostVersion>1.59.0.0</BoostVersion>
+    <GflagsVersion>2.1.2.1</GflagsVersion>
+    <GlogVersion>0.3.3.0</GlogVersion>
+    <Hdf5Version>1.8.15.2</Hdf5Version>
+    <LevelDBVersion>1.2.0.0</LevelDBVersion>
+    <LmdbVersion>0.9.14.0</LmdbVersion>
+    <OpenBLASVersion>0.2.14.1</OpenBLASVersion>
+    <OpenCVVersion>2.4.10</OpenCVVersion>
+    <ProtobufVersion>2.6.1</ProtobufVersion>
+    <!-- Set CUDA architecture suitable for your GPU.
+         Setting proper architecture is important to mimize your run and compile time. -->
+    <CudaArchitecture>compute_52,sm_52</CudaArchitecture>
+    <!-- CuDNN 3 and 4 are supported -->
+    <CuDnnPath>$(SolutionDir)..\</CuDnnPath>
+    <ScriptsDir>$(SolutionDir)..\scripts</ScriptsDir>
+  </PropertyGroup>
+    <ImportGroup Label="PropertySheets">
+    <Import Project="$(NugetDir)\glog.$(GlogVersion)\build\native\glog.props" Condition="Exists('$(NugetDir)\glog.$(GlogVersion)\build\native\glog.props')" />
+    <Import Project="$(NugetDir)\gflags.$(GflagsVersion)\build\native\gflags.props" Condition="Exists('$(NugetDir)\gflags.$(GflagsVersion)\build\native\gflags.props')" />
+    <Import Project="$(NugetDir)\protoc_x64.$(ProtobufVersion)\build\native\protoc_x64.props" Condition="Exists('$(NugetDir)\protoc_x64.$(ProtobufVersion)\build\native\protoc_x64.props')" />
+    <Import Project="$(NugetDir)\OpenCV.$(OpenCVVersion)\build\native\OpenCV.props" Condition="Exists('$(NugetDir)\OpenCV.$(OpenCVVersion)\build\native\OpenCV.props')" />
+  </ImportGroup>
+  <ImportGroup Label="ExtensionSettings" Condition="'$(CpuOnlyBuild)'=='false'">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA $(CudaVersion).props" Condition="Exists('$(VCTargetsPath)\BuildCustomizations\CUDA $(CudaVersion).props')"/>
+  </ImportGroup>
+  <PropertyGroup Condition="'$(CpuOnlyBuild)'=='false'">
+    <LibraryPath>$(CUDA_PATH)\lib\$(Platform);$(LibraryPath)</LibraryPath>
+    <IncludePath>$(CUDA_PATH)\include;$(IncludePath)</IncludePath>
+    <CudaDependencies>cublas.lib;cuda.lib;curand.lib;cudart.lib</CudaDependencies>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(CpuOnlyBuild)'=='false' And '$(UseCuDNN)'=='true' And '$(CuDnnPath)'!=''">
+    <CudaDependencies>cudnn.lib;$(CudaDependencies)</CudaDependencies>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(CpuOnlyBuild)'=='false' And '$(UseCuDNN)'=='true' And '$(CuDnnPath)'!=''">
+    <LibraryPath>$(CuDnnPath)\cuda\lib\x64;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(CuDnnPath)\cuda\include;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup>
+    <LibraryPath>$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)/../include/caffe/proto;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup>
+    <IncludePath>$(NugetDir)\OpenBLAS.$(OpenBLASVersion)\lib\native\include;$(NugetDir)\protobuf-v$(PlatformToolsetVersion).$(ProtobufVersion)\build\native\include;$(NugetDir)\glog.$(GlogVersion)\build\native\include;$(NugetDir)\gflags.$(GflagsVersion)\build\native\include;$(NugetDir)\boost.$(BoostVersion)\lib\native\include;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(PythonSupport)'=='true'">
+    <PythonDir>C:\Miniconda2\</PythonDir>
+    <LibraryPath>$(PythonDir)\libs;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(PythonDir)\include;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(MatlabSupport)'=='true'">
+    <MatlabDir>C:\Program Files\MATLAB\R2014b</MatlabDir>
+    <LibraryPath>$(MatlabDir)\extern\lib\win64\microsoft;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(MatlabDir)\extern\include;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(CpuOnlyBuild)'=='true'">
+    <ClCompile>
+      <PreprocessorDefinitions>CPU_ONLY;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(CpuOnlyBuild)'=='false' And '$(UseCuDNN)'=='true'">
+    <ClCompile>
+      <PreprocessorDefinitions>USE_CUDNN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <CudaCompile>
+      <Defines>USE_CUDNN</Defines>
+    </CudaCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(PythonSupport)'=='true'">
+    <ClCompile>
+      <PreprocessorDefinitions>WITH_PYTHON_LAYER;BOOST_PYTHON_STATIC_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(MatlabSupport)'=='true'">
+    <ClCompile>
+      <PreprocessorDefinitions>MATLAB_MEX_FILE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <MinimalRebuild>false</MinimalRebuild>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <PreprocessorDefinitions>_SCL_SECURE_NO_WARNINGS;USE_OPENCV;USE_LEVELDB;USE_LMDB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <TreatWarningAsError>true</TreatWarningAsError>
+    </ClCompile>
+    <ClCompile>
+      <DisableSpecificWarnings>4819;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <TreatWarningAsError>false</TreatWarningAsError>
+    </ClCompile>
+    <Lib>
+      <AdditionalOptions>/ignore:4221 %(AdditionalOptions)</AdditionalOptions>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <Optimization>Full</Optimization>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <Import Project="$(SolutionDir)\CaffeBuildSettings.targets"/>
+  <ImportGroup Label="ExtensionTargets">
+    <Import Condition="!$(CpuOnlyBuild) And Exists('$(VCTargetsPath)\BuildCustomizations\CUDA $(CudaVersion).targets')" Project="$(VCTargetsPath)\BuildCustomizations\CUDA $(CudaVersion).targets" />
+    <Import Project="$(NugetDir)\OpenCV.$(OpenCVVersion)\build\native\OpenCV.targets" Condition="Exists('$(NugetDir)\OpenCV.$(OpenCVVersion)\build\native\OpenCV.targets')" />
+    <Import Project="$(NugetDir)\boost.$(BoostVersion)\build\native\boost.targets" Condition="Exists('$(NugetDir)\boost.$(BoostVersion)\build\native\boost.targets')" />
+    <Import Project="$(NugetDir)\boost_date_time-vc$(PlatformToolsetVersion).$(BoostVersion)\build\native\boost_date_time-vc$(PlatformToolsetVersion).targets" Condition="Exists('$(NugetDir)\boost_date_time-vc$(PlatformToolsetVersion).$(BoostVersion)\build\native\boost_date_time-vc$(PlatformToolsetVersion).targets')" />
+    <Import Project="$(NugetDir)\boost_thread-vc$(PlatformToolsetVersion).$(BoostVersion)\build\native\boost_thread-vc$(PlatformToolsetVersion).targets" Condition="Exists('$(NugetDir)\boost_thread-vc$(PlatformToolsetVersion).$(BoostVersion)\build\native\boost_thread-vc$(PlatformToolsetVersion).targets')" />
+    <Import Project="$(NugetDir)\boost_system-vc$(PlatformToolsetVersion).$(BoostVersion)\build\native\boost_system-vc$(PlatformToolsetVersion).targets" Condition="Exists('$(NugetDir)\boost_system-vc$(PlatformToolsetVersion).$(BoostVersion)\build\native\boost_system-vc$(PlatformToolsetVersion).targets')" />
+    <Import Project="$(NugetDir)\boost_filesystem-vc$(PlatformToolsetVersion).$(BoostVersion)\build\native\boost_filesystem-vc$(PlatformToolsetVersion).targets" Condition="Exists('$(NugetDir)\boost_filesystem-vc$(PlatformToolsetVersion).$(BoostVersion)\build\native\boost_filesystem-vc$(PlatformToolsetVersion).targets')" />
+    <Import Project="$(NugetDir)\boost_chrono-vc$(PlatformToolsetVersion).$(BoostVersion)\build\native\boost_chrono-vc$(PlatformToolsetVersion).targets" Condition="Exists('$(NugetDir)\boost_chrono-vc$(PlatformToolsetVersion).$(BoostVersion)\build\native\boost_chrono-vc$(PlatformToolsetVersion).targets')" />
+    <Import Project="$(NugetDir)\boost_python2.7-vc$(PlatformToolsetVersion).$(BoostVersion)\build\native\boost_python-vc$(PlatformToolsetVersion).targets" Condition="Exists('$(NugetDir)\boost_python2.7-vc$(PlatformToolsetVersion).$(BoostVersion)\build\native\boost_python-vc$(PlatformToolsetVersion).targets')" />
+    <Import Project="$(NugetDir)\OpenBLAS.$(OpenBLASVersion)\build\native\openblas.targets" Condition="Exists('$(NugetDir)\OpenBLAS.$(OpenBLASVersion)\build\native\openblas.targets')" />
+    <Import Project="$(NugetDir)\hdf5-v$(PlatformToolsetVersion)-complete.$(Hdf5Version)\build\native\hdf5-v$(PlatformToolsetVersion).targets" Condition="Exists('$(NugetDir)\hdf5-v$(PlatformToolsetVersion)-complete.$(Hdf5Version)\build\native\hdf5-v$(PlatformToolsetVersion).targets')" />
+    <Import Project="$(NugetDir)\gflags.$(GflagsVersion)\build\native\gflags.targets" Condition="Exists('$(NugetDir)\gflags.$(GflagsVersion)\build\native\gflags.targets')" />
+    <Import Project="$(NugetDir)\glog.$(GlogVersion)\build\native\glog.targets" Condition="Exists('$(NugetDir)\glog.$(GlogVersion)\build\native\glog.targets')" />
+    <Import Project="$(NugetDir)\protobuf-v$(PlatformToolsetVersion).$(ProtobufVersion)\build\native\protobuf-v$(PlatformToolsetVersion).targets" Condition="Exists('$(NugetDir)\protobuf-v$(PlatformToolsetVersion).$(ProtobufVersion)\build\native\protobuf-v$(PlatformToolsetVersion).targets')" />
+    <Import Project="$(NugetDir)\LevelDB-vc$(PlatformToolsetVersion).$(LevelDBVersion)\build\native\LevelDB-vc$(PlatformToolsetVersion).targets" Condition="Exists('$(NugetDir)\LevelDB-vc$(PlatformToolsetVersion).$(LevelDBVersion)\build\native\LevelDB-vc$(PlatformToolsetVersion).targets')" />
+    <Import Project="$(NugetDir)\lmdb-v$(PlatformToolsetVersion)-clean.$(LmdbVersion)\build\native\lmdb-v$(PlatformToolsetVersion)-clean.targets" Condition="Exists('$(NugetDir)\lmdb-v$(PlatformToolsetVersion)-clean.$(LmdbVersion)\build\native\lmdb-v$(PlatformToolsetVersion)-clean.targets')" />
+  </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('$(NugetDir)\OpenCV.$(OpenCVVersion)\build\native\OpenCV.props')" Text="$([System.String]::Format('$(ErrorText)', '$(NugetDir)\OpenCV.$(OpenCVVersion)\build\native\OpenCV.props'))" />
+    <Error Condition="!Exists('$(NugetDir)\OpenCV.$(OpenCVVersion)\build\native\OpenCV.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NugetDir)\OpenCV.$(OpenCVVersion)\build\native\OpenCV.targets'))" />
+    <Error Condition="!Exists('$(NugetDir)\boost.$(BoostVersion)\build\native\boost.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NugetDir)\boost.$(BoostVersion)\build\native\boost.targets'))" />
+    <Error Condition="!Exists('$(NugetDir)\boost_date_time-vc$(PlatformToolsetVersion).$(BoostVersion)\build\native\boost_date_time-vc$(PlatformToolsetVersion).targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NugetDir)\boost_date_time-vc$(PlatformToolsetVersion).$(BoostVersion)\build\native\boost_date_time-vc$(PlatformToolsetVersion).targets'))" />
+    <Error Condition="!Exists('$(NugetDir)\boost_thread-vc$(PlatformToolsetVersion).$(BoostVersion)\build\native\boost_thread-vc$(PlatformToolsetVersion).targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NugetDir)\boost_thread-vc$(PlatformToolsetVersion).$(BoostVersion)\build\native\boost_thread-vc$(PlatformToolsetVersion).targets'))" />
+    <Error Condition="!Exists('$(NugetDir)\boost_filesystem-vc$(PlatformToolsetVersion).$(BoostVersion)\build\native\boost_filesystem-vc$(PlatformToolsetVersion).targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NugetDir)\boost_filesystem-vc$(PlatformToolsetVersion).$(BoostVersion)\build\native\boost_filesystem-vc$(PlatformToolsetVersion).targets'))" />
+    <Error Condition="!Exists('$(NugetDir)\boost_system-vc$(PlatformToolsetVersion).$(BoostVersion)\build\native\boost_system-vc$(PlatformToolsetVersion).targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NugetDir)\boost_system-vc$(PlatformToolsetVersion).$(BoostVersion)\build\native\boost_system-vc$(PlatformToolsetVersion).targets'))" />
+    <Error Condition="!Exists('$(NugetDir)\boost_python2.7-vc$(PlatformToolsetVersion).$(BoostVersion)\build\native\boost_python-vc$(PlatformToolsetVersion).targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NugetDir)\boost_python2.7-vc$(PlatformToolsetVersion).$(BoostVersion)\build\native\boost_python-vc$(PlatformToolsetVersion).targets'))" />
+    <Error Condition="!Exists('$(NugetDir)\boost_chrono-vc$(PlatformToolsetVersion).$(BoostVersion)\build\native\boost_chrono-vc$(PlatformToolsetVersion).targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NugetDir)\boost_chrono-vc$(PlatformToolsetVersion).$(BoostVersion)\build\native\boost_chrono-vc$(PlatformToolsetVersion).targets'))" />
+    <Error Condition="!Exists('$(NugetDir)\OpenBLAS.$(OpenBLASVersion)\build\native\openblas.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NugetDir)\OpenBLAS.$(OpenBLASVersion)\build\native\openblas.targets'))" />
+    <Error Condition="!Exists('$(NugetDir)\hdf5-v$(PlatformToolsetVersion)-complete.$(Hdf5Version)\build\native\hdf5-v$(PlatformToolsetVersion).targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NugetDir)\hdf5-v$(PlatformToolsetVersion)-complete.$(Hdf5Version)\build\native\hdf5-v$(PlatformToolsetVersion).targets'))" />
+    <Error Condition="!Exists('$(NugetDir)\protoc_x64.$(ProtobufVersion)\build\native\protoc_x64.props')" Text="$([System.String]::Format('$(ErrorText)', '$(NugetDir)\protoc_x64.$(ProtobufVersion)\build\native\protoc_x64.props'))" />
+    <Error Condition="!Exists('$(NugetDir)\gflags.$(GflagsVersion)\build\native\gflags.props')" Text="$([System.String]::Format('$(ErrorText)', '$(NugetDir)\gflags.$(GflagsVersion)\build\native\gflags.props'))" />
+    <Error Condition="!Exists('$(NugetDir)\gflags.$(GflagsVersion)\build\native\gflags.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NugetDir)\gflags.$(GflagsVersion)\build\native\gflags.targets'))" />
+    <Error Condition="!Exists('$(NugetDir)\glog.$(GlogVersion)\build\native\glog.props')" Text="$([System.String]::Format('$(ErrorText)', '$(NugetDir)\glog.$(GlogVersion)\build\native\glog.props'))" />
+    <Error Condition="!Exists('$(NugetDir)\glog.$(GlogVersion)\build\native\glog.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NugetDir)\glog.$(GlogVersion)\build\native\glog.targets'))" />
+    <Error Condition="!Exists('$(NugetDir)\protobuf-v$(PlatformToolsetVersion).$(ProtobufVersion)\build\native\protobuf-v$(PlatformToolsetVersion).targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NugetDir)\protobuf-v$(PlatformToolsetVersion).$(ProtobufVersion)\build\native\protobuf-v$(PlatformToolsetVersion).targets'))" />
+    <Error Condition="!Exists('$(NugetDir)\LevelDB-vc$(PlatformToolsetVersion).$(LevelDBVersion)\build\native\LevelDB-vc$(PlatformToolsetVersion).targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NugetDir)\LevelDB-vc$(PlatformToolsetVersion).$(LevelDBVersion)\build\native\LevelDB-vc$(PlatformToolsetVersion).targets'))" />
+    <Error Condition="!Exists('$(NugetDir)\lmdb-v$(PlatformToolsetVersion)-clean.$(LmdbVersion)\build\native\lmdb-v$(PlatformToolsetVersion)-clean.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NugetDir)\lmdb-v$(PlatformToolsetVersion)-clean.$(LmdbVersion)\build\native\lmdb-v$(PlatformToolsetVersion)-clean.targets'))" />
+  </Target>
+</Project>
